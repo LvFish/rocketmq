@@ -45,14 +45,14 @@ public class MQClientManager {
     }
 
     public MQClientInstance getOrCreateMQClientInstance(final ClientConfig clientConfig, RPCHook rpcHook) {
-        String clientId = clientConfig.buildMQClientId();
-        MQClientInstance instance = this.factoryTable.get(clientId);
-        if (null == instance) {
+        String clientId = clientConfig.buildMQClientId(); //获取客户端id
+        MQClientInstance instance = this.factoryTable.get(clientId); //从缓存中获取MQ客户端实例
+        if (null == instance) { //如果没有获取到，创建一个MQ客户端实例
             instance =
                 new MQClientInstance(clientConfig.cloneClientConfig(),
                     this.factoryIndexGenerator.getAndIncrement(), clientId, rpcHook);
             MQClientInstance prev = this.factoryTable.putIfAbsent(clientId, instance);
-            if (prev != null) {
+            if (prev != null) { //之前的实例，之前有的话，就返回之前的那个实例，主要是为了解决并发问题，有两个线程同时创建实例
                 instance = prev;
                 log.warn("Returned Previous MQClientInstance for clientId:[{}]", clientId);
             } else {

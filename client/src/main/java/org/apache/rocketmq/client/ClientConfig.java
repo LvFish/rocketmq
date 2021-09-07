@@ -34,19 +34,25 @@ import org.apache.rocketmq.remoting.protocol.LanguageCode;
  */
 public class ClientConfig {
     public static final String SEND_MESSAGE_WITH_VIP_CHANNEL_PROPERTY = "com.rocketmq.sendMessageWithVIPChannel";
+    // 默认去jvm启动参数rocketmq.namesrv.addr，系统环境变量NAMESRV_ADDR中找，nameserv的地址，最好是自己设置进去。DefaultMQProducer类setNamesrvAddr就是赋值
     private String namesrvAddr = NameServerAddressUtils.getNameServerAddresses();
+    //本客户端ip
     private String clientIP = RemotingUtil.getLocalAddress();
+    //实例名称 默认去jvm的启动参数去查找rocketmq.client.name，没有设置为DEFAULT
     private String instanceName = System.getProperty("rocketmq.client.name", "DEFAULT");
+    //CPU核心数，执行callback线程池的线程核心数
     private int clientCallbackExecutorThreads = Runtime.getRuntime().availableProcessors();
     protected String namespace;
     protected AccessChannel accessChannel = AccessChannel.LOCAL;
 
     /**
      * Pulling topic information interval from the named server
+     * 多久去nameserv获取topic信息，默认是30s
      */
     private int pollNameServerInterval = 1000 * 30;
     /**
      * Heartbeat interval in microseconds with message broker
+     * 与broker心跳间隔时间，默认是30s，就是每隔30s向broker发送心跳
      */
     private int heartbeatBrokerInterval = 1000 * 30;
     /**

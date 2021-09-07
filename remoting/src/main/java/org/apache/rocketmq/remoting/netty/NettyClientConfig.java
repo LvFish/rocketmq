@@ -19,21 +19,29 @@ package org.apache.rocketmq.remoting.netty;
 public class NettyClientConfig {
     /**
      * Worker thread number
+     * 处理netty自定义handler的线程数
      */
     private int clientWorkerThreads = NettySystemConfig.clientWorkerSize;
+    // 默认值cpu核心线程数，callback的线程数，用来执行注册的processor
     private int clientCallbackExecutorThreads = Runtime.getRuntime().availableProcessors();
+    // 默认是65535 当发送单向消息的时候，信号量限流
     private int clientOnewaySemaphoreValue = NettySystemConfig.CLIENT_ONEWAY_SEMAPHORE_VALUE;
+    // 默认是65535 当发送异步消息的时候，信号量限流
     private int clientAsyncSemaphoreValue = NettySystemConfig.CLIENT_ASYNC_SEMAPHORE_VALUE;
+    // 连接超时时间 3000
     private int connectTimeoutMillis = NettySystemConfig.connectTimeoutMillis;
     private long channelNotActiveInterval = 1000 * 60;
 
     /**
      * IdleStateEvent will be triggered when neither read nor write was performed for
      * the specified period of this time. Specify {@code 0} to disable
+     * netty客户端 channel最大空闲时间
      */
     private int clientChannelMaxIdleTimeSeconds = NettySystemConfig.clientChannelMaxIdleTimeSeconds;
 
+    // netty客户端发送buffer
     private int clientSocketSndBufSize = NettySystemConfig.socketSndbufSize;
+    // netty客户端接收buffer
     private int clientSocketRcvBufSize = NettySystemConfig.socketRcvbufSize;
     private boolean clientPooledByteBufAllocatorEnable = false;
     private boolean clientCloseSocketIfTimeout = NettySystemConfig.clientCloseSocketIfTimeout;

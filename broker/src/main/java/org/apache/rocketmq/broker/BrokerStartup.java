@@ -121,8 +121,10 @@ public class BrokerStartup {
                 messageStoreConfig.setAccessMessageInMemoryMaxRatio(ratio);
             }
 
-            if (commandLine.hasOption('c')) {
-                String file = commandLine.getOptionValue('c');
+//            if (commandLine.hasOption('c')) {
+//                String file = commandLine.getOptionValue('c');
+            //访问我们指定的文件
+            String file = "/Users/bytedance/Documents/rocketmq/broker/src/conf/broker-a.properties";
                 if (file != null) {
                     configFile = file;
                     InputStream in = new BufferedInputStream(new FileInputStream(file));
@@ -138,7 +140,7 @@ public class BrokerStartup {
                     BrokerPathConfigHelper.setBrokerConfigPath(file);
                     in.close();
                 }
-            }
+//            }
 
             MixAll.properties2Object(ServerUtil.commandLine2Properties(commandLine), brokerConfig);
 

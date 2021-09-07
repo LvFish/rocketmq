@@ -126,17 +126,19 @@ public class MQClientInstance {
     public MQClientInstance(ClientConfig clientConfig, int instanceIndex, String clientId, RPCHook rpcHook) {
         this.clientConfig = clientConfig;
         this.instanceIndex = instanceIndex;
-        this.nettyClientConfig = new NettyClientConfig();
-        this.nettyClientConfig.setClientCallbackExecutorThreads(clientConfig.getClientCallbackExecutorThreads());
-        this.nettyClientConfig.setUseTLS(clientConfig.isUseTLS());
-        this.clientRemotingProcessor = new ClientRemotingProcessor(this);
+        this.nettyClientConfig = new NettyClientConfig(); //netty client配置
+        this.nettyClientConfig.setClientCallbackExecutorThreads(clientConfig.getClientCallbackExecutorThreads()); //设置客户端回调线程数
+        this.nettyClientConfig.setUseTLS(clientConfig.isUseTLS()); //设置是否启动TLS
+        this.clientRemotingProcessor = new ClientRemotingProcessor(this); //processor
         this.mQClientAPIImpl = new MQClientAPIImpl(this.nettyClientConfig, this.clientRemotingProcessor, rpcHook, clientConfig);
 
+        //nameserv不是null的话，更新nameserv的地址表
         if (this.clientConfig.getNamesrvAddr() != null) {
             this.mQClientAPIImpl.updateNameServerAddressList(this.clientConfig.getNamesrvAddr());
             log.info("user specified name server address: {}", this.clientConfig.getNamesrvAddr());
         }
 
+        //客户端id
         this.clientId = clientId;
 
         this.mQAdminImpl = new MQAdminImpl(this);
@@ -145,9 +147,11 @@ public class MQClientInstance {
 
         this.rebalanceService = new RebalanceService(this);
 
+        //client内部的一个producer，它的组是CLIENT_INNER_PRODUCER
         this.defaultMQProducer = new DefaultMQProducer(MixAll.CLIENT_INNER_PRODUCER_GROUP);
         this.defaultMQProducer.resetClientConfig(clientConfig);
 
+        //消费者状态管理器
         this.consumerStatsManager = new ConsumerStatsManager(this.scheduledExecutorService);
 
         log.info("Created a new client Instance, InstanceIndex:{}, ClientID:{}, ClientConfig:{}, ClientVersion:{}, SerializerType:{}",
@@ -232,9 +236,10 @@ public class MQClientInstance {
                         this.mQClientAPIImpl.fetchNameServerAddr();
                     }
                     // Start request-response channel
-                    this.mQClientAPIImpl.start();
+                    // 封装了一个remotingClient，这个远程客户端使用netty作为通信框架
+                    this.mQClientAPIImpl.start(); //启动的是netty客户端
                     // Start various schedule tasks
-                    this.startScheduledTask();
+                    this.startScheduledTask(); //启动定时任务
                     // Start pull service
                     this.pullMessageService.start();
                     // Start rebalance service
@@ -254,6 +259,7 @@ public class MQClientInstance {
 
     private void startScheduledTask() {
         if (null == this.clientConfig.getNamesrvAddr()) {
+            //获取nameserv地址，2分钟执行一次
             this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
                 @Override
@@ -272,7 +278,7 @@ public class MQClientInstance {
             @Override
             public void run() {
                 try {
-                    MQClientInstance.this.updateTopicRouteInfoFromNameServer();
+                    MQClientInstance.this.updateTopicRouteInfoFromNameServer(); //定时更新topic信息
                 } catch (Exception e) {
                     log.error("ScheduledTask updateTopicRouteInfoFromNameServer exception", e);
                 }
@@ -280,7 +286,7 @@ public class MQClientInstance {
         }, 10, this.clientConfig.getPollNameServerInterval(), TimeUnit.MILLISECONDS);
 
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
-
+            // 定时发送心跳检测
             @Override
             public void run() {
                 try {
