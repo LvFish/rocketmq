@@ -751,6 +751,7 @@ public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsume
      * @param topic topic to subscribe.
      * @param subExpression subscription expression.it only support or operation such as "tag1 || tag2 || tag3" <br>
      * if null or * expression,meaning subscribe all
+     * 基于tag过滤消息
      * @throws MQClientException if there is any client error.
      */
     @Override

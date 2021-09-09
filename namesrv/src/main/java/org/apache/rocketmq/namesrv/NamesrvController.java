@@ -63,7 +63,9 @@ public class NamesrvController {
     public NamesrvController(NamesrvConfig namesrvConfig, NettyServerConfig nettyServerConfig) {
         this.namesrvConfig = namesrvConfig;
         this.nettyServerConfig = nettyServerConfig;
+        // kv配置manager
         this.kvConfigManager = new KVConfigManager(this);
+        // 路由信息管理器
         this.routeInfoManager = new RouteInfoManager();
         this.brokerHousekeepingService = new BrokerHousekeepingService(this);
         this.configuration = new Configuration(
@@ -77,13 +79,17 @@ public class NamesrvController {
 
         this.kvConfigManager.load();
 
+        // 创建server
         this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.brokerHousekeepingService);
 
+        // 创建默认线程8的线程池
         this.remotingExecutor =
             Executors.newFixedThreadPool(nettyServerConfig.getServerWorkerThreads(), new ThreadFactoryImpl("RemotingExecutorThread_"));
 
+        // 注册processor
         this.registerProcessor();
 
+        // 任务调度线程池 用来扫描掉线的broker 10s每次
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
@@ -92,6 +98,7 @@ public class NamesrvController {
             }
         }, 5, 10, TimeUnit.SECONDS);
 
+        // 10分钟执行一次打印kv的操作
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
