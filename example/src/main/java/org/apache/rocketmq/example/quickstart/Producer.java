@@ -30,6 +30,7 @@ public class Producer {
 
         /*
          * Instantiate with a producer group name.
+         * 基于生产者组初始化生产者
          */
         DefaultMQProducer producer = new DefaultMQProducer("please_rename_unique_group_name");
 

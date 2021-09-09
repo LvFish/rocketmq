@@ -135,7 +135,9 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         this.defaultMQProducer = defaultMQProducer;
         this.rpcHook = rpcHook;
 
+        // 消息队列 存储需要发送的消息
         this.asyncSenderThreadPoolQueue = new LinkedBlockingQueue<Runnable>(50000);
+        // 核心线程池数量 = 最大线程池数量 = CPU核数
         this.defaultAsyncSenderExecutor = new ThreadPoolExecutor(
             Runtime.getRuntime().availableProcessors(),
             Runtime.getRuntime().availableProcessors(),
@@ -196,7 +198,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
     public void start(final boolean startFactory) throws MQClientException {
         switch (this.serviceState) {
             case CREATE_JUST: //刚创建还没有启动
-                this.serviceState = ServiceState.START_FAILED; //设置为启动失败状态
+                this.serviceState = ServiceState.START_FAILED; // 默认设置为启动失败状态
 
                 this.checkConfig(); //检查group配置
 
@@ -205,6 +207,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
                     this.defaultMQProducer.changeInstanceNameToPID();
                 }
 
+                // mQClientFactory里面存储了producerGroup和producer的关系
                 this.mQClientFactory = MQClientManager.getInstance().getOrCreateMQClientInstance(this.defaultMQProducer, rpcHook);
 
                 //进行注册

@@ -440,7 +440,7 @@ public class NettyRemotingClient extends NettyRemotingAbstract implements Remoti
                 }
 
                 if (addrList != null && !addrList.isEmpty()) {
-                    //使用轮训算法获取nameserv地址
+                    //使用轮训算法获取nameserv地址 寻找到第一个可用的nameserv
                     for (int i = 0; i < addrList.size(); i++) {
                         int index = this.namesrvIndex.incrementAndGet();
                         index = Math.abs(index);

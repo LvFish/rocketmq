@@ -303,6 +303,7 @@ public class MQClientInstance {
 
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
+            // 定时任务 5s每次 消费者偏移量持久化
             @Override
             public void run() {
                 try {
@@ -315,6 +316,7 @@ public class MQClientInstance {
 
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
+            //定时任务 动态调整线程池 1分钟一次
             @Override
             public void run() {
                 try {
