@@ -320,6 +320,7 @@ public abstract class NettyRemotingAbstract {
                         } catch (Throwable e) {
                             log.warn("execute callback in executor exception, and callback throw", e);
                         } finally {
+                            // 释放信号量
                             responseFuture.release();
                         }
                     }
@@ -410,8 +411,11 @@ public abstract class NettyRemotingAbstract {
         final int opaque = request.getOpaque();
 
         try {
+            // 创建 responseFuture
             final ResponseFuture responseFuture = new ResponseFuture(channel, opaque, timeoutMillis, null, null);
+            // 放入response表中
             this.responseTable.put(opaque, responseFuture);
+            // 获取远程地址
             final SocketAddress addr = channel.remoteAddress();
             channel.writeAndFlush(request).addListener(new ChannelFutureListener() {
                 @Override
@@ -423,6 +427,7 @@ public abstract class NettyRemotingAbstract {
                         responseFuture.setSendRequestOK(false);
                     }
 
+                    // 移除response
                     responseTable.remove(opaque);
                     responseFuture.setCause(f.cause());
                     responseFuture.putResponse(null);
@@ -430,18 +435,22 @@ public abstract class NettyRemotingAbstract {
                 }
             });
 
+            // 等待结果
             RemotingCommand responseCommand = responseFuture.waitResponse(timeoutMillis);
             if (null == responseCommand) {
-                if (responseFuture.isSendRequestOK()) {
+                if (responseFuture.isSendRequestOK()) { // 成功了 还是null，表示超时
                     throw new RemotingTimeoutException(RemotingHelper.parseSocketAddressAddr(addr), timeoutMillis,
                         responseFuture.getCause());
                 } else {
+                    // 没发出去 抛出发送异常
                     throw new RemotingSendRequestException(RemotingHelper.parseSocketAddressAddr(addr), responseFuture.getCause());
                 }
             }
 
+            // 返回响应结果
             return responseCommand;
         } finally {
+            // 移除
             this.responseTable.remove(opaque);
         }
     }
@@ -451,8 +460,9 @@ public abstract class NettyRemotingAbstract {
         throws InterruptedException, RemotingTooMuchRequestException, RemotingTimeoutException, RemotingSendRequestException {
         long beginStartTime = System.currentTimeMillis();
         final int opaque = request.getOpaque();
+        // 信号量限流
         boolean acquired = this.semaphoreAsync.tryAcquire(timeoutMillis, TimeUnit.MILLISECONDS);
-        if (acquired) {
+        if (acquired) { // 获取许可
             final SemaphoreReleaseOnlyOnce once = new SemaphoreReleaseOnlyOnce(this.semaphoreAsync);
             long costTime = System.currentTimeMillis() - beginStartTime;
             if (timeoutMillis < costTime) {
@@ -460,9 +470,12 @@ public abstract class NettyRemotingAbstract {
                 throw new RemotingTimeoutException("invokeAsyncImpl call timeout");
             }
 
+            // 封装responseFuture
             final ResponseFuture responseFuture = new ResponseFuture(channel, opaque, timeoutMillis - costTime, invokeCallback, once);
+            // 放入response表中
             this.responseTable.put(opaque, responseFuture);
             try {
+                // 发送
                 channel.writeAndFlush(request).addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture f) throws Exception {
@@ -475,6 +488,7 @@ public abstract class NettyRemotingAbstract {
                     }
                 });
             } catch (Exception e) {
+                // 释放信号量
                 responseFuture.release();
                 log.warn("send a request command to channel <" + RemotingHelper.parseChannelRemoteAddr(channel) + "> Exception", e);
                 throw new RemotingSendRequestException(RemotingHelper.parseChannelRemoteAddr(channel), e);

@@ -373,23 +373,30 @@ public class NettyRemotingClient extends NettyRemotingAbstract implements Remoti
     @Override
     public RemotingCommand invokeSync(String addr, final RemotingCommand request, long timeoutMillis)
         throws InterruptedException, RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException {
+        // 开始时间
         long beginStartTime = System.currentTimeMillis();
+        // 获取channel
         final Channel channel = this.getAndCreateChannel(addr);
         if (channel != null && channel.isActive()) {
             try {
+                // 执行开始之前的rpcHook
                 doBeforeRpcHooks(addr, request);
                 long costTime = System.currentTimeMillis() - beginStartTime;
-                if (timeoutMillis < costTime) {
+                if (timeoutMillis < costTime) { // 判断是否超时
                     throw new RemotingTimeoutException("invokeSync call timeout");
                 }
+                // 进行 同步执行，获取响应
                 RemotingCommand response = this.invokeSyncImpl(channel, request, timeoutMillis - costTime);
+                // 执行之后的rpcHook
                 doAfterRpcHooks(RemotingHelper.parseChannelRemoteAddr(channel), request, response);
                 return response;
             } catch (RemotingSendRequestException e) {
                 log.warn("invokeSync: send request exception, so close the channel[{}]", addr);
+                // 关闭channel
                 this.closeChannel(addr, channel);
                 throw e;
             } catch (RemotingTimeoutException e) {
+                // 如果超时就关闭channel的话，就关闭channel。默认不关闭
                 if (nettyClientConfig.isClientCloseSocketIfTimeout()) {
                     this.closeChannel(addr, channel);
                     log.warn("invokeSync: close socket because of timeout, {}ms, {}", timeoutMillis, addr);
@@ -528,14 +535,18 @@ public class NettyRemotingClient extends NettyRemotingAbstract implements Remoti
         throws InterruptedException, RemotingConnectException, RemotingTooMuchRequestException, RemotingTimeoutException,
         RemotingSendRequestException {
         long beginStartTime = System.currentTimeMillis();
+        // 获取channel
         final Channel channel = this.getAndCreateChannel(addr);
         if (channel != null && channel.isActive()) {
             try {
+                // 之前调用的钩子
                 doBeforeRpcHooks(addr, request);
+                // 判断超时时间
                 long costTime = System.currentTimeMillis() - beginStartTime;
                 if (timeoutMillis < costTime) {
                     throw new RemotingTooMuchRequestException("invokeAsync call timeout");
                 }
+                // 进行调用
                 this.invokeAsyncImpl(channel, request, timeoutMillis - costTime, invokeCallback);
             } catch (RemotingSendRequestException e) {
                 log.warn("invokeAsync: send request exception, so close the channel[{}]", addr);

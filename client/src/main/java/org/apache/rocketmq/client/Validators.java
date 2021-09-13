@@ -85,6 +85,7 @@ public class Validators {
         }
         // topic
         Validators.checkTopic(msg.getTopic());
+        // 判断该topic是否不可以发消息
         Validators.isNotAllowedSendTopic(msg.getTopic());
 
         // body
