@@ -93,6 +93,7 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
                 public void run() {
                     ConsumeMessageOrderlyService.this.lockMQPeriodically();
                 }
+                // 默认每20s锁定一下queue，这个锁定queue是向broker 申请锁定
             }, 1000 * 1, ProcessQueue.REBALANCE_LOCK_INTERVAL, TimeUnit.MILLISECONDS);
         }
     }

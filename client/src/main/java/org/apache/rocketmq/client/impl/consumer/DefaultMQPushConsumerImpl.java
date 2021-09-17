@@ -578,10 +578,12 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                     this.defaultMQPushConsumer.getMessageModel(), this.defaultMQPushConsumer.isUnitMode());
                 this.serviceState = ServiceState.START_FAILED;
 
+                // 检查配置
                 this.checkConfig();
 
                 this.copySubscription();
 
+                // 如果消费者是集群模式的话 实例name为DEFAULT，则改为PID#毫秒
                 if (this.defaultMQPushConsumer.getMessageModel() == MessageModel.CLUSTERING) {
                     this.defaultMQPushConsumer.changeInstanceNameToPID();
                 }
@@ -596,6 +598,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                 this.pullAPIWrapper = new PullAPIWrapper(
                     mQClientFactory,
                     this.defaultMQPushConsumer.getConsumerGroup(), isUnitMode());
+                // 注册消息的钩子
                 this.pullAPIWrapper.registerFilterMessageHook(filterMessageHookList);
 
                 if (this.defaultMQPushConsumer.getOffsetStore() != null) {
@@ -603,9 +606,11 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                 } else {
                     switch (this.defaultMQPushConsumer.getMessageModel()) {
                         case BROADCASTING:
+                            // 广播用local文件存储
                             this.offsetStore = new LocalFileOffsetStore(this.mQClientFactory, this.defaultMQPushConsumer.getConsumerGroup());
                             break;
                         case CLUSTERING:
+                            // 集群用远程broker存储
                             this.offsetStore = new RemoteBrokerOffsetStore(this.mQClientFactory, this.defaultMQPushConsumer.getConsumerGroup());
                             break;
                         default:
@@ -660,6 +665,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
     private void checkConfig() throws MQClientException {
         Validators.checkGroup(this.defaultMQPushConsumer.getConsumerGroup());
 
+        // 消费组名称不能为null
         if (null == this.defaultMQPushConsumer.getConsumerGroup()) {
             throw new MQClientException(
                 "consumerGroup is null"
@@ -667,6 +673,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                 null);
         }
 
+        // 消费组名称不能为DEFAULT_CONSUMER
         if (this.defaultMQPushConsumer.getConsumerGroup().equals(MixAll.DEFAULT_CONSUMER_GROUP)) {
             throw new MQClientException(
                 "consumerGroup can not equal "
@@ -676,6 +683,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                 null);
         }
 
+        // 消费模式不能为null
         if (null == this.defaultMQPushConsumer.getMessageModel()) {
             throw new MQClientException(
                 "messageModel is null"
@@ -683,6 +691,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                 null);
         }
 
+        // 从哪开始消费
         if (null == this.defaultMQPushConsumer.getConsumeFromWhere()) {
             throw new MQClientException(
                 "consumeFromWhere is null"
@@ -699,6 +708,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
         }
 
         // allocateMessageQueueStrategy
+        // rebelance策略 平均分配
         if (null == this.defaultMQPushConsumer.getAllocateMessageQueueStrategy()) {
             throw new MQClientException(
                 "allocateMessageQueueStrategy is null"
@@ -707,6 +717,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
         }
 
         // subscription
+        // 订阅的topic
         if (null == this.defaultMQPushConsumer.getSubscription()) {
             throw new MQClientException(
                 "subscription is null"
@@ -715,6 +726,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
         }
 
         // messageListener
+        // 消息监听器
         if (null == this.defaultMQPushConsumer.getMessageListener()) {
             throw new MQClientException(
                 "messageListener is null"
@@ -722,7 +734,9 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                 null);
         }
 
+        // 是否为顺序消息
         boolean orderly = this.defaultMQPushConsumer.getMessageListener() instanceof MessageListenerOrderly;
+        // 是否为并发消息
         boolean concurrently = this.defaultMQPushConsumer.getMessageListener() instanceof MessageListenerConcurrently;
         if (!orderly && !concurrently) {
             throw new MQClientException(
@@ -732,6 +746,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
         }
 
         // consumeThreadMin
+        // 最小消费线程在1-1000
         if (this.defaultMQPushConsumer.getConsumeThreadMin() < 1
             || this.defaultMQPushConsumer.getConsumeThreadMin() > 1000) {
             throw new MQClientException(
@@ -741,6 +756,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
         }
 
         // consumeThreadMax
+        // 最大消费线程在1-1000之间
         if (this.defaultMQPushConsumer.getConsumeThreadMax() < 1 || this.defaultMQPushConsumer.getConsumeThreadMax() > 1000) {
             throw new MQClientException(
                 "consumeThreadMax Out of range [1, 1000]"

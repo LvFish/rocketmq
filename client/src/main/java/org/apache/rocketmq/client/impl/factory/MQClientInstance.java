@@ -244,9 +244,9 @@ public class MQClientInstance {
                     // Start various schedule tasks
                     this.startScheduledTask(); //启动定时任务
                     // Start pull service
-                    this.pullMessageService.start();
+                    this.pullMessageService.start(); //启动拉消息服务
                     // Start rebalance service
-                    this.rebalanceService.start();
+                    this.rebalanceService.start(); //启动负载均衡服务
                     // Start push service
                     this.defaultMQProducer.getDefaultMQProducerImpl().start(false);
                     log.info("the client factory [{}] start OK", this.clientId);
