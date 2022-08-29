@@ -84,6 +84,7 @@ public class NamesrvController {
 
         this.registerProcessor();
 
+        //检查不活跃的broker列表 10s每次
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
@@ -92,6 +93,7 @@ public class NamesrvController {
             }
         }, 5, 10, TimeUnit.SECONDS);
 
+        //打印所有的信息 10分钟每次
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override

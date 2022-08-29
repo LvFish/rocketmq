@@ -49,6 +49,7 @@ public class Validators {
 
     /**
      * Validate group
+     * group name长度不能大于255
      */
     public static void checkGroup(String group) throws MQClientException {
         if (UtilAll.isBlank(group)) {

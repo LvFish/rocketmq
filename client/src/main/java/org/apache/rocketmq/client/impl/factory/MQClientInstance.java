@@ -1017,7 +1017,9 @@ public class MQClientInstance {
 
     public String findBrokerAddressInPublish(final String brokerName) {
         HashMap<Long/* brokerId */, String/* address */> map = this.brokerAddrTable.get(brokerName);
+        // brokerAddrTable存储的是一个broker集群
         if (map != null && !map.isEmpty()) {
+            // 获取集群中的主broker，只有主节点可以写数据
             return map.get(MixAll.MASTER_ID);
         }
 
