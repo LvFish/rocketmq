@@ -116,7 +116,9 @@ public class BrokerConfig {
 
     private boolean slaveReadEnable = false;
 
+    // 慢消费的consumer禁用
     private boolean disableConsumeIfConsumerReadSlowly = false;
+    // 落后的容忍度是 1024L * 1024 * 1024 * 16 ，一个commitLog的大小=1024L * 1024 * 1024 * 16
     private long consumerFallbehindThreshold = 1024L * 1024 * 1024 * 16;
 
     private boolean brokerFastFailureEnable = true;
